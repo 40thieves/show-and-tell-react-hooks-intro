@@ -1,0 +1,270 @@
+export { default as theme } from './theme'
+
+import { Head } from 'mdx-deck'
+import { Split } from 'mdx-deck/layouts'
+import ScrollableCode from './ScrollableCode.js'
+
+<Head>
+  <title>React Hooks</title>
+</Head>
+
+# React Hooks
+### Show & Tell - May 2019
+
+---
+
+## Recap
+
+React works by giving it a ["description of the DOM"](https://amazing-golick-cd8b08.netlify.com/#7)
+that we want to see in the "real DOM".
+
+When we want to change the DOM, we use the state and lifecycle APIs of the
+[class component](https://amazing-golick-cd8b08.netlify.com/#9).
+
+This approach has some downsides.
+
+---
+
+## Disclaimer
+
+The React team, have been **extremely** strong in stressing that by introducing
+Hooks, they **do not recommend** rewriting your entire application to Hooks.
+
+<small>We don't have much React, so this isn't really relevant for us.</small>
+
+---
+
+## Motivation
+
+From the [Hooks documentation](https://reactjs.org/docs/hooks-intro.html):
+
+- Classes confuse both people and machines
+- Complex components become hard to understand
+- It’s hard to reuse stateful logic between components
+
+Let's have a look at these in more detail.
+
+---
+
+##### Classes confuse both people and machines
+
+The `this` keyword is famously counter-intuitive to both newer and more
+experienced programmers.
+
+Class inheritance isn't *really* used by React - it's just a convenient way to
+inject the API into our components. The React team do not recommend creating
+multiple levels of inheritance.
+
+Worse, classes are hard to fully optimise: for example class method names
+cannot be minified.
+
+---
+
+##### Complex components become hard to understand
+
+<ScrollableCode height={75}>
+
+```jsx
+class WindowWidth extends React.Component {
+  constructor(props) {
+    super(props)
+    this.state = {
+      width: null
+    }
+  }
+  componentDidMount() {
+    window.addEventListener('resize', this.handleResize)
+  }
+  componentWillUnmount() {
+    window.removeEventListener('resize', this.handleResize)
+  }
+  handleResize = () => {
+    this.setState({ width: window.innerWidth })
+  }
+  render() {
+    return <div>Window width: {this.state.width}</div>
+  }
+}
+```
+
+</ScrollableCode>
+
+---
+
+##### It’s hard to reuse stateful logic between components
+
+<ScrollableCode height={75}>
+
+```jsx
+class ProjectData extends React.Component {
+  constructor(props) {
+    super(props)
+    this.state = {
+      data: null,
+      err: null
+    }
+  }
+  componentDidMount() {
+    doFetch()
+  }
+  componentDidUpdate(prevProps) {
+    if (this.props.id !== prevProps.id) {
+      doFetch()
+    }
+  }
+  doFetch = () => {
+    fetch(this.props.url)
+      .then(res => res.json())
+      .then(data => this.setState({ data }))
+      .catch(err => this.setState({ err }))
+  }
+  render() {
+    if (!this.state.data) {
+      return <div>Loading...</div>
+    } else if (this.state.err) {
+      return <div>Oh noes!</div>
+    } else {
+      return <div>Project title: {this.state.data.title}</div>
+    }
+  }
+}
+```
+
+</ScrollableCode>
+
+---
+
+## Hooks Are Here To Help
+
+---
+
+##### State Hook
+
+```jsx
+import React, { useState } from 'react'
+
+function Counter() {
+  const [count, setCount] = useState(0)
+
+  const handleClick = () => setCount(count + 1)
+
+  return (
+    <div>
+      <p>You clicked {count} times</p>
+      <button onClick={handleClick}>Click me</button>
+    </div>
+  )
+}
+```
+
+---
+
+##### Effect Hook
+
+```jsx
+import React, { useState, useEffect } from 'react'
+
+function WindowWidth() {
+  const [width, setWidth] = useState(window.innerWidth)
+
+  const handleResize = () => setWidth(window.innerWidth)
+
+  useEffect(() => {
+    window.addEventListener('resize', handleResize)
+    return () => {
+      window.removeEventListener('resize', handleResize)
+    }
+  })
+
+  return <div>Window width: {width}</div>
+}
+```
+
+---
+
+##### Custom Hooks
+
+```jsx
+import { useState, useEffect } from 'react'
+
+function useWindowWidth() {
+  const [width, setWidth] = useState(window.innerWidth)
+
+  const handleResize = () => setWidth(window.innerWidth)
+
+  useEffect(() => {
+    window.addEventListener('resize', handleResize)
+    return () => {
+      window.removeEventListener('resize', handleResize)
+    }
+  })
+
+  return width
+}
+
+export default useWindowWidth
+```
+
+---
+
+##### Custom Hooks (cont.)
+
+```jsx
+import useWindowWidth from './path/to/custom/hook'
+
+function MyComponent() {
+  const windowWidth = useWindowWidth()
+
+  return <div>The window width is: {windowWidth}</div>
+}
+```
+
+---
+
+#### Custom Hooks (cont.)
+
+```
+$ npm install @rehooks/window-size
+```
+
+```jsx
+import useWindowWidth from '@rehooks/window-size'
+
+function MyComponent() {
+  const windowWidth = useWindowWidth()
+
+  return <div>The window width is: {windowWidth}</div>
+}
+```
+
+---
+
+## Gotchas
+
+---
+
+### Rules of Hooks
+
+Hooks are JavaScript functions, but they impose two additional rules:
+
+- Only call Hooks at the top level. Don’t call Hooks inside loops, conditions,
+or nested functions
+- Only call Hooks from React function components. Don’t call Hooks from regular
+JavaScript functions.
+
+<small>
+
+There is an [eslint rule](https://www.npmjs.com/package/eslint-plugin-react-hooks)
+to guard against breaking these rules.
+
+</small>
+
+---
+
+### Closures
+
+JavaScript [*closes over*](https://en.wikipedia.org/wiki/Closure_(computer_programming))
+values in function scope. This can occasionally produce unexpected behaviour in
+hooks:  [Broken example](https://codesandbox.io/s/react-hooks-closures-broken-uqt13)
+
+There is fix however, based around using a React ref: [Fixed example](https://codesandbox.io/s/react-hooks-closures-fixed-knp6v)
