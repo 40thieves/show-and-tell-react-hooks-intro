@@ -277,7 +277,8 @@ Some async APIs (like `setInterval`) can be quite "aggressive", so can create
 some confusing bugs.
 
 This (somewhat long) [video](https://www.youtube.com/watch?v=Vi_46Io0UZc) walks
-through a example of this problem and it's solution.
+through a example of this [problem](https://codesandbox.io/s/p35qwvr6rq) and
+it's [solution](https://codesandbox.io/s/r7no0pm78p).
 
 The key is that if part of the component's state depends on other parts of state
 then another hook `useReducer` is helpful. This [blog post](https://kentcdodds.com/blog/should-i-usestate-or-usereducer)
