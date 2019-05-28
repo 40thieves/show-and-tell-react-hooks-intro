@@ -271,6 +271,20 @@ There is fix however, based around using a React ref: [Fixed example](https://co
 
 ---
 
+### Hooks and (some) async APIs
+
+Some async APIs (like `setInterval`) can be quite "aggressive", so can create
+some confusing bugs.
+
+This (somewhat long) [video](https://www.youtube.com/watch?v=Vi_46Io0UZc) walks
+through a example of this problem and it's solution.
+
+The key is that if part of the component's state depends on other parts of state
+then another hook `useReducer` is helpful. This [blog post](https://kentcdodds.com/blog/should-i-usestate-or-usereducer)
+might be useful too.
+
+---
+
 ## Thanks!
 
 What questions do you have?
